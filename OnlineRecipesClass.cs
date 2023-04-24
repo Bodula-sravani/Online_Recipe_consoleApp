@@ -165,6 +165,29 @@ namespace OnlineRecipes
             }
             return false;
         }
+
+        public bool deleteRecipe(string username)
+        {
+            try
+            {
+                Console.WriteLine("Enter id of recipe to be deleted from list");
+                int id = Convert.ToInt32(Console.ReadLine());
+                connection.Open();
+                SqlCommand command = new SqlCommand("deleterecipe", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("id", id);
+                command.Parameters.AddWithValue("userId", username);
+                command.ExecuteNonQuery();
+                connection.Close();
+                return true;
+
+            }
+            catch(SqlException e)
+            {
+                Console.WriteLine("Error: " + e.Message);
+            }
+            return false;
+        }
         static void Main(string[] args)
         {
             OnlineRecipesClass app = new OnlineRecipesClass();
@@ -225,18 +248,17 @@ namespace OnlineRecipes
                                         break;
                                     case 1:
                                         Console.WriteLine();
-                                        Console.WriteLine("Recipes section");
+                                        Console.WriteLine("....Your Recipes section.....");
                                         int recipeChoice = 0;
                                         do
                                         {
                                             int count = app.listUserRecipes(currentUser.userId);
+                                            Console.WriteLine();
                                             if (count == 0) Console.WriteLine("You have not uploded any recipes");
                                             Console.WriteLine();
                                             Console.WriteLine("Press 1 to upload another recipe");
                                             Console.WriteLine("press 2 to delete a recipe");
-                                            Console.WriteLine("Press 3 to edit a recipe");
                                             Console.WriteLine("Press 0 to back to userpage");
-                                            recipeChoice = Convert.ToInt32(Console.ReadLine());
                                             recipeChoice = Convert.ToInt32(Console.ReadLine());
                                             switch (recipeChoice)
                                             {
@@ -246,15 +268,48 @@ namespace OnlineRecipes
                                                     break;
                                                 case 1:
                                                     Console.WriteLine();
-                                                    if (app.addRecipe(currentUser.userId)) Console.WriteLine(" Recipe Successfully added");
+                                                    if (app.addRecipe(currentUser.userId)) Console.WriteLine("....Recipe Successfully added....");
                                                     break;
                                                 case 2:
                                                     Console.WriteLine();
+                                                    if (app.deleteRecipe(currentUser.userId)) Console.WriteLine("....Recipe Successfully deleted....");
                                                     break;
                                             }
 
                                         } while (recipeChoice != 0);
 
+                                        break;
+                                    case 2:
+                                        Console.WriteLine();
+                                        Console.WriteLine("....Your fav recipes section....");
+                                        int favChoice = 0;
+                                        do
+                                        {
+                                            int count = app.listUserfavRecipes(currentUser.userId);
+                                            Console.WriteLine();
+                                            if (count == 0) Console.WriteLine("You have no fav recipes");
+                                            Console.WriteLine();
+                                            Console.WriteLine("Press 1 to add a recipe to favrouties");
+                                            Console.WriteLine("press 2 to delete a a favourite");
+                                            Console.WriteLine("Press 0 to back to userpage");
+                                            favChoice = Convert.ToInt32(Console.ReadLine());
+                                            switch (favChoice)
+                                            {
+                                                case 0:
+                                                    Console.WriteLine();
+                                                    Console.WriteLine("....Redircting to User pager....");
+                                                    break;
+                                                case 1:
+                                                    Console.WriteLine();
+                                                    if (app.addRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully added....");
+                                                    break;
+                                                case 2:
+                                                    Console.WriteLine();
+                                                    if (app.deleteRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully deleted....");
+                                                    break;
+                                            }
+
+                                        } while(favChoice != 0);
                                         break;
 
 
