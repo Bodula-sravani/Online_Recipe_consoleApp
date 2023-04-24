@@ -13,31 +13,9 @@ namespace OnlineRecipes
             this.connection = new SqlConnection(connectionString);
         }
 
-        public bool ExecuteQuery(string query)
-        {
-            // Takes Query and executes it by handling exception
-            
-            try
-            {
-                connection.Open();
-                using (SqlCommand command = connection.CreateCommand())
-                {
-                    command.CommandText = query;
-                    command.ExecuteNonQuery();
-                    connection.Close();
-                    return true;
-                }
-                connection.Close();
-            }
-            catch (SqlException e)
-            {
-                Console.WriteLine("Error: " + e.Message);
-                return false;
-            }
-        }
-
         public void addUser(string username, string password)
         {
+            // Add new user during registration using stored procedure
             try
             {
                 connection.Open();
@@ -57,6 +35,7 @@ namespace OnlineRecipes
 
         public bool validateUser(string username,string password) 
         {
+            // To validate the user credentials by first checking if user exists at all
             connection.Open();
             SqlCommand countCommand = new SqlCommand($"select count(*) from users where userId ='{username}'", connection);
             int count = Convert.ToInt32(countCommand.ExecuteScalar());
@@ -91,6 +70,7 @@ namespace OnlineRecipes
 
         public int listUserRecipes(string username)
         {
+            // TO get list of particular user recipes
             connection.Open();
             SqlCommand countCommand = new SqlCommand($"select count(*) from recipes where userId ='{username}'",connection);
             int count = Convert.ToInt32(countCommand.ExecuteScalar());
@@ -128,6 +108,7 @@ namespace OnlineRecipes
 
         public bool addRecipe(string username)
         {
+            // Add a new recipe by a user
             Recipe recipe = new Recipe();
             Console.WriteLine();
             Console.WriteLine("Enter name of recipe");
@@ -168,6 +149,7 @@ namespace OnlineRecipes
 
         public bool deleteRecipe(string username)
         {
+            // User deletes one of his/her own recipes
             try
             {
                 Console.WriteLine("Enter id of recipe to be deleted from list");
@@ -192,6 +174,7 @@ namespace OnlineRecipes
 
         public int searchRecipe(int filter)
         {
+            // Search for recipe based on filter by name or by category or just lists all available
             string query = "";
             string countquery = "";
             if (filter == 1)
@@ -250,20 +233,20 @@ namespace OnlineRecipes
         static void Main(string[] args)
         {
             OnlineRecipesClass app = new OnlineRecipesClass();
-            int quitApp = 0;
+            int quitApp = 0;  // used to quit the app
             do
             {
                 Console.WriteLine(".....WELCOME TO ONLINE RECIPE PORTAL......");
                 Console.WriteLine();
                 Console.WriteLine("Press 1 to quit the app");
-                Console.WriteLine("Press 0 to  homepage");
+                Console.WriteLine("Press 0 to  homepage");    
                 quitApp = Convert.ToInt32(Console.ReadLine());
                 switch(quitApp)
                 {
                     case 0:
                         Console.WriteLine();
                         Console.WriteLine("Enter 1 for newUser 0 for existing User");
-                        int userOption = Convert.ToInt32(Console.ReadLine());
+                        int userOption = Convert.ToInt32(Console.ReadLine());  // to store register or login option
                         if (userOption == 1)
                         {
                             Console.WriteLine();
@@ -276,7 +259,7 @@ namespace OnlineRecipes
                             app.addUser(newuserId, newpassword);
                         }
                         Console.WriteLine();
-                        Console.WriteLine(".....LOGIN.......");
+                        Console.WriteLine(".....LOGIN PAGE.......");
                         Console.WriteLine("Please enter your userId ");
                         string userId = Console.ReadLine();
                         Console.WriteLine();
@@ -284,7 +267,7 @@ namespace OnlineRecipes
                         string password = Console.ReadLine();
                         if (app.validateUser(userId, password))
                         {
-                            user currentUser = new user();
+                            user currentUser = new user();   // Storing current user to manipulate throughout his/her login session
                             currentUser.userId = userId;
                             currentUser.password = password;
                             Console.WriteLine();
@@ -292,7 +275,7 @@ namespace OnlineRecipes
                             int userChoice = 0;
                             do
                             {
-                                // This is userPage
+                                // This is userPage and options available
                                 Console.WriteLine("choose from following sections");
                                 Console.WriteLine("Press 0 to logout");
                                 Console.WriteLine("Press 1 to open your recipes section");
@@ -312,7 +295,7 @@ namespace OnlineRecipes
                                         int recipeChoice = 0;
                                         do
                                         {
-                                            // This is user recipe section
+                                            // This is user recipe section and options avaibale
                                             int count = app.listUserRecipes(currentUser.userId);
                                             Console.WriteLine();
                                             if (count == 0) Console.WriteLine("You have not uploded any recipes");
@@ -346,7 +329,7 @@ namespace OnlineRecipes
                                     //    int favChoice = 0;
                                     //    do
                                     //    {
-                                    //        // This is favourite recipes section
+                                    //        // This is favourite recipes section and options avaiable
                                     //        int count = app.listUserfavRecipes(currentUser.userId);
                                     //        Console.WriteLine();
                                     //        if (count == 0) Console.WriteLine("You have no fav recipes");
@@ -379,15 +362,19 @@ namespace OnlineRecipes
                                         int searchFilter = 0;
                                         do
                                         {
+                                            // This is search page 
                                             Console.WriteLine();
                                             Console.WriteLine("Press 1 to filter by category");
                                             Console.WriteLine("press 2 to search by name of recipe");
+                                            Console.WriteLine("press 3 to search by no filter");
                                             Console.WriteLine("Press 0 to back to userpage");
                                             searchFilter= Convert.ToInt32(Console.ReadLine());
-                                            int count = app.searchRecipe(searchFilter);
-                                            Console.WriteLine();
-                                            if (count == 0) Console.WriteLine("No  recipes Avaialble ");
-
+                                            if (searchFilter != 0)
+                                            {
+                                                int count = app.searchRecipe(searchFilter);
+                                                Console.WriteLine();
+                                                if (count == 0) Console.WriteLine("No  recipes Avaialble ");
+                                            }
                                         } while(searchFilter!=0);
                                         break;
 
@@ -401,12 +388,14 @@ namespace OnlineRecipes
                         }
                         else
                         {
+                            // If the credetails are wrong 
                             Console.WriteLine();
                             Console.WriteLine("....Wrong credentials....");
                             Console.WriteLine("....Returing to home page....");
                         }
                         break;
                     case 1:
+                        // Quit app case
                         Console.WriteLine();
                         Console.WriteLine("....Quitting the app....");
                         break;
