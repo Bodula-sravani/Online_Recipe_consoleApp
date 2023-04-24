@@ -253,6 +253,7 @@ namespace OnlineRecipes
                                         int recipeChoice = 0;
                                         do
                                         {
+                                            // This is user recipe section
                                             int count = app.listUserRecipes(currentUser.userId);
                                             Console.WriteLine();
                                             if (count == 0) Console.WriteLine("You have not uploded any recipes");
