@@ -188,6 +188,65 @@ namespace OnlineRecipes
             }
             return false;
         }
+
+
+        public int searchRecipe(int filter)
+        {
+            string query = "";
+            string countquery = "";
+            if (filter == 1)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Choose category breakfast,lunch,dinner,snack");
+                string category = Console.ReadLine().Trim();
+                query = $"select * from recipes where category='{category}'";
+                countquery = $"select count(*) from recipes where category='{category}'";
+            }
+            else if(filter==2)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Enter name of recipe");
+                string name = Console.ReadLine().Trim();
+                query = $"select * from recipes where name like '%{name}%'";
+                countquery = $"select count(*) from recipes where name like '%{name}%'";
+            }
+            else
+            {
+                query = "select * from recipes";
+                countquery = "select count(*) from recipes";
+            }
+            connection.Open();
+            SqlCommand countCommand = new SqlCommand(query, connection);
+            int count = Convert.ToInt32(countCommand.ExecuteScalar());
+            connection.Close();
+            if(count==0) return count;
+            try
+            {
+                connection.Open();   
+                SqlCommand command = new SqlCommand(query, connection);
+                SqlDataReader reader = command.ExecuteReader();
+                Console.WriteLine();
+                Console.WriteLine("List of Recipes");
+                Console.WriteLine("Id  Name     Ingredients         CookingTime     Instructions        createdDate     category        ");
+                while (reader.Read())
+                {
+                    for (int j = 0; j < reader.FieldCount - 1; j++)
+                    {
+                        Console.Write(reader[j] + " ");
+                    }
+                    Console.WriteLine();
+                }
+                reader.Close();
+                connection.Close();
+
+            }
+            catch (SqlException e)
+            {
+                Console.WriteLine("Error: " + e.Message);
+            }
+            return count;
+        }
+        
         static void Main(string[] args)
         {
             OnlineRecipesClass app = new OnlineRecipesClass();
@@ -281,37 +340,55 @@ namespace OnlineRecipes
                                         } while (recipeChoice != 0);
 
                                         break;
-                                    case 2:
+                                    //case 2:
+                                    //    Console.WriteLine();
+                                    //    Console.WriteLine("....Your fav recipes section....");
+                                    //    int favChoice = 0;
+                                    //    do
+                                    //    {
+                                    //        // This is favourite recipes section
+                                    //        int count = app.listUserfavRecipes(currentUser.userId);
+                                    //        Console.WriteLine();
+                                    //        if (count == 0) Console.WriteLine("You have no fav recipes");
+                                    //        Console.WriteLine();
+                                    //        Console.WriteLine("Press 1 to add a recipe to favrouties");
+                                    //        Console.WriteLine("press 2 to delete a a favourite");
+                                    //        Console.WriteLine("Press 0 to back to userpage");
+                                    //        favChoice = Convert.ToInt32(Console.ReadLine());
+                                    //        switch (favChoice)
+                                    //        {
+                                    //            case 0:
+                                    //                Console.WriteLine();
+                                    //                Console.WriteLine("....Redircting to User pager....");
+                                    //                break;
+                                    //            case 1:
+                                    //                Console.WriteLine();
+                                    //                if (app.addFavRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully added....");
+                                    //                break;
+                                    //            case 2:
+                                    //                Console.WriteLine();
+                                    //                if (app.deleteFavRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully deleted....");
+                                    //                break;
+                                    //        }
+
+                                    //    } while(favChoice != 0);
+                                    //    break;
+                                    case 3:
                                         Console.WriteLine();
-                                        Console.WriteLine("....Your fav recipes section....");
-                                        int favChoice = 0;
+                                        Console.WriteLine("....Search page....");
+                                        int searchFilter = 0;
                                         do
                                         {
-                                            int count = app.listUserfavRecipes(currentUser.userId);
                                             Console.WriteLine();
-                                            if (count == 0) Console.WriteLine("You have no fav recipes");
-                                            Console.WriteLine();
-                                            Console.WriteLine("Press 1 to add a recipe to favrouties");
-                                            Console.WriteLine("press 2 to delete a a favourite");
+                                            Console.WriteLine("Press 1 to filter by category");
+                                            Console.WriteLine("press 2 to search by name of recipe");
                                             Console.WriteLine("Press 0 to back to userpage");
-                                            favChoice = Convert.ToInt32(Console.ReadLine());
-                                            switch (favChoice)
-                                            {
-                                                case 0:
-                                                    Console.WriteLine();
-                                                    Console.WriteLine("....Redircting to User pager....");
-                                                    break;
-                                                case 1:
-                                                    Console.WriteLine();
-                                                    if (app.addRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully added....");
-                                                    break;
-                                                case 2:
-                                                    Console.WriteLine();
-                                                    if (app.deleteRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully deleted....");
-                                                    break;
-                                            }
+                                            searchFilter= Convert.ToInt32(Console.ReadLine());
+                                            int count = app.searchRecipe(searchFilter);
+                                            Console.WriteLine();
+                                            if (count == 0) Console.WriteLine("No  recipes Avaialble ");
 
-                                        } while(favChoice != 0);
+                                        } while(searchFilter!=0);
                                         break;
 
 
