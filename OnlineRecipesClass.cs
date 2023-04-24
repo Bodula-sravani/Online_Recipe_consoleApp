@@ -67,30 +67,32 @@ namespace OnlineRecipes
             return false;
         
         }
-
-        public int listUserRecipes(string username)
+        public int listRecipes(string countQuery,string selectQuery)
         {
-            // TO get list of particular user recipes
             connection.Open();
-            SqlCommand countCommand = new SqlCommand($"select count(*) from recipes where userId ='{username}'",connection);
+            SqlCommand countCommand = new SqlCommand(countQuery, connection);
             int count = Convert.ToInt32(countCommand.ExecuteScalar());
             connection.Close();
             if (count == 0) return count;
             try
             {
                 connection.Open();
-                string query = $"select * from recipes where userId='{username}'";
-                SqlCommand command = new SqlCommand(query, connection);
+                SqlCommand command = new SqlCommand(selectQuery, connection);
                 SqlDataReader reader = command.ExecuteReader();
                 Console.WriteLine();
-                Console.WriteLine("Recipes uploaded by you");
-                Console.WriteLine("Id  Name     Ingredients         CookingTime     Instructions        createdDate     category        ");
+                Console.WriteLine(".......List of Recipes.......");
+                //Console.WriteLine("Id  Name     Ingredients         CookingTime     Instructions        createdDate     category        ");
                 while (reader.Read())
                 {
-                    for (int j = 0; j < reader.FieldCount-1; j++)
-                    {
-                        Console.Write(reader[j] + " ");
-                    }
+                    Console.WriteLine("Id: " + reader["recipeId"]);
+                    Console.WriteLine("Name: " + reader["Name"]);
+                    Console.WriteLine("Cooking tims: " + reader["cookingTime"]);
+                    Console.WriteLine("Ingredients: " + reader["ingredients"]);
+                    Console.WriteLine("instructions: " + reader["instructions"]);
+                    Console.WriteLine("createdDate: " + reader["createdDate"]);
+                    Console.WriteLine("category: " + reader["category"]);
+                    Console.WriteLine("userId: " + reader["userId"]);
+
                     Console.WriteLine();
                 }
                 reader.Close();
@@ -102,6 +104,18 @@ namespace OnlineRecipes
                 Console.WriteLine("Error: " + e.Message);
             }
             return count;
+        }
+        public void listUserRecipes(string username)
+        {
+            // TO get list of particular user recipes
+            string countQuery = $"select count(*) from recipes where userId ='{username}'";
+       
+            string selectQuery = $"select * from recipes where userId='{username}'";
+
+            int count = listRecipes(countQuery,selectQuery);
+
+            if (count == 0) Console.WriteLine("..........No recipes uploaded by you........");
+     
         }
 
 
@@ -172,48 +186,53 @@ namespace OnlineRecipes
         }
 
 
-        public int searchRecipe(int filter)
+        public void searchRecipe(int filter)
         {
             // Search for recipe based on filter by name or by category or just lists all available
-            string query = "";
-            string countquery = "";
+            string selectQuery = "";
+            string countQuery = "";
             if (filter == 1)
             {
                 Console.WriteLine();
                 Console.WriteLine("Choose category breakfast,lunch,dinner,snack");
                 string category = Console.ReadLine().Trim();
-                query = $"select * from recipes where category='{category}'";
-                countquery = $"select count(*) from recipes where category='{category}'";
+                selectQuery = $"select * from recipes where category='{category}'";
+                countQuery = $"select count(*) from recipes where category='{category}'";
             }
             else if(filter==2)
             {
                 Console.WriteLine();
                 Console.WriteLine("Enter name of recipe");
                 string name = Console.ReadLine().Trim();
-                query = $"select * from recipes where name like '%{name}%'";
-                countquery = $"select count(*) from recipes where name like '%{name}%'";
+                selectQuery = $"select * from recipes where name like '%{name}%'";
+                countQuery = $"select count(*) from recipes where name like '%{name}%'";
             }
             else
             {
-                query = "select * from recipes";
-                countquery = "select count(*) from recipes";
+                selectQuery = "select * from recipes";
+                countQuery = "select count(*) from recipes";
             }
+            int count = listRecipes(countQuery, selectQuery);
+
+            if (count == 0) Console.WriteLine("..........No recipes Available........");
+        }
+        
+        public int listUserFavRecipes(string username)
+        {
             connection.Open();
-            SqlCommand countCommand = new SqlCommand(query, connection);
+            SqlCommand countCommand = new SqlCommand($"select count(*) from favourites where userId='{username}'", connection);
             int count = Convert.ToInt32(countCommand.ExecuteScalar());
             connection.Close();
-            if(count==0) return count;
+            if (count == 0) return count;
             try
             {
-                connection.Open();   
-                SqlCommand command = new SqlCommand(query, connection);
-                SqlDataReader reader = command.ExecuteReader();
-                Console.WriteLine();
-                Console.WriteLine("List of Recipes");
-                Console.WriteLine("Id  Name     Ingredients         CookingTime     Instructions        createdDate     category        ");
+                connection.Open();
+                SqlCommand Command = new SqlCommand($"select * from favourites where userId='{username}'", connection);
+                SqlDataReader reader = Command.ExecuteReader();
+                Console.WriteLine("ID    USERID    RECIPEID");
                 while (reader.Read())
                 {
-                    for (int j = 0; j < reader.FieldCount - 1; j++)
+                    for (int j = 0; j < reader.FieldCount; j++)
                     {
                         Console.Write(reader[j] + " ");
                     }
@@ -221,15 +240,63 @@ namespace OnlineRecipes
                 }
                 reader.Close();
                 connection.Close();
+            }
+            catch(SqlException e)
+            {
+                Console.WriteLine("Error: "+e.Message);
+            }
+            return count;
+        }
+
+        public bool addFavRecipe(string username)
+        {
+            // To add fav recipe of a user
+            searchRecipe(3);   //Lists all avaialbe recipes
+            try
+            {
+                Console.WriteLine("Enter the recipe id: ");
+                int recipeID = Convert.ToInt32(Console.ReadLine());
+                connection.Open();
+                 SqlCommand command = new SqlCommand("insertFav", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("recipeId", recipeID);
+                command.Parameters.AddWithValue("userID", username);
+                command.ExecuteNonQuery();
+                connection.Close();
+                return true;
 
             }
             catch (SqlException e)
             {
                 Console.WriteLine("Error: " + e.Message);
             }
-            return count;
+            return false;
+
         }
-        
+        public bool deleteFavRecipe(string username)
+        {
+           // TO delete fav receipe of a user
+            try
+            {
+                Console.WriteLine("Enter id of fav recipe to be deleted from fav list");
+                int id = Convert.ToInt32(Console.ReadLine());
+                connection.Open();
+                SqlCommand command = new SqlCommand("deleteFav", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("id", id);
+                command.Parameters.AddWithValue("userId", username);
+                command.ExecuteNonQuery();
+                connection.Close();
+                return true;
+
+            }
+            catch (SqlException e)
+            {
+                Console.WriteLine("Error: " + e.Message);
+            }
+            return false;
+
+        }
         static void Main(string[] args)
         {
             OnlineRecipesClass app = new OnlineRecipesClass();
@@ -296,9 +363,8 @@ namespace OnlineRecipes
                                         do
                                         {
                                             // This is user recipe section and options avaibale
-                                            int count = app.listUserRecipes(currentUser.userId);
+                                            app.listUserRecipes(currentUser.userId);
                                             Console.WriteLine();
-                                            if (count == 0) Console.WriteLine("You have not uploded any recipes");
                                             Console.WriteLine();
                                             Console.WriteLine("Press 1 to upload another recipe");
                                             Console.WriteLine("press 2 to delete a recipe");
@@ -323,39 +389,39 @@ namespace OnlineRecipes
                                         } while (recipeChoice != 0);
 
                                         break;
-                                    //case 2:
-                                    //    Console.WriteLine();
-                                    //    Console.WriteLine("....Your fav recipes section....");
-                                    //    int favChoice = 0;
-                                    //    do
-                                    //    {
-                                    //        // This is favourite recipes section and options avaiable
-                                    //        int count = app.listUserfavRecipes(currentUser.userId);
-                                    //        Console.WriteLine();
-                                    //        if (count == 0) Console.WriteLine("You have no fav recipes");
-                                    //        Console.WriteLine();
-                                    //        Console.WriteLine("Press 1 to add a recipe to favrouties");
-                                    //        Console.WriteLine("press 2 to delete a a favourite");
-                                    //        Console.WriteLine("Press 0 to back to userpage");
-                                    //        favChoice = Convert.ToInt32(Console.ReadLine());
-                                    //        switch (favChoice)
-                                    //        {
-                                    //            case 0:
-                                    //                Console.WriteLine();
-                                    //                Console.WriteLine("....Redircting to User pager....");
-                                    //                break;
-                                    //            case 1:
-                                    //                Console.WriteLine();
-                                    //                if (app.addFavRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully added....");
-                                    //                break;
-                                    //            case 2:
-                                    //                Console.WriteLine();
-                                    //                if (app.deleteFavRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully deleted....");
-                                    //                break;
-                                    //        }
+                                    case 2:
+                                        Console.WriteLine();
+                                        Console.WriteLine("....Your fav recipes section....");
+                                        int favChoice = 0;
+                                        do
+                                        {
+                                            // This is favourite recipes section and options avaiable
+                                            int count = app.listUserFavRecipes(currentUser.userId);
+                                            Console.WriteLine();
+                                            if (count == 0) Console.WriteLine(".....NO FAV RECIPEs.....");
+                                            Console.WriteLine();
+                                            Console.WriteLine("Press 1 to add a recipe to favrouties");
+                                            Console.WriteLine("press 2 to delete a a favourite");
+                                            Console.WriteLine("Press 0 to back to userpage");
+                                            favChoice = Convert.ToInt32(Console.ReadLine());
+                                            switch (favChoice)
+                                            {
+                                                case 0:
+                                                    Console.WriteLine();
+                                                    Console.WriteLine("....Redircting to User pager....");
+                                                    break;
+                                                case 1:
+                                                    Console.WriteLine();
+                                                    if (app.addFavRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully added....");
+                                                    break;
+                                                case 2:
+                                                    Console.WriteLine();
+                                                    if (app.deleteFavRecipe(currentUser.userId)) Console.WriteLine("....Fav Recipe Successfully deleted....");
+                                                    break;
+                                            }
 
-                                    //    } while(favChoice != 0);
-                                    //    break;
+                                        } while (favChoice != 0);
+                                        break;
                                     case 3:
                                         Console.WriteLine();
                                         Console.WriteLine("....Search page....");
@@ -371,20 +437,14 @@ namespace OnlineRecipes
                                             searchFilter= Convert.ToInt32(Console.ReadLine());
                                             if (searchFilter != 0)
                                             {
-                                                int count = app.searchRecipe(searchFilter);
+                                                app.searchRecipe(searchFilter);
                                                 Console.WriteLine();
-                                                if (count == 0) Console.WriteLine("No  recipes Avaialble ");
                                             }
                                         } while(searchFilter!=0);
                                         break;
-
-
                                 }
 
                             } while (userChoice != 0);
-
-
-
                         }
                         else
                         {
