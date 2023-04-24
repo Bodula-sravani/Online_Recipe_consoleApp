@@ -233,6 +233,7 @@ namespace OnlineRecipes
                             int userChoice = 0;
                             do
                             {
+                                // This is userPage
                                 Console.WriteLine("choose from following sections");
                                 Console.WriteLine("Press 0 to logout");
                                 Console.WriteLine("Press 1 to open your recipes section");
